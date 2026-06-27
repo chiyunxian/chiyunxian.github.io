@@ -265,7 +265,7 @@
         <div class="tab active" data-mode="school">按学校查看</div>
         <div class="tab" data-mode="major">按专业查看</div>
       </div>
-      <input type="text" class="search" id="search" placeholder="搜索学校名称 / A+专业名称">
+      <input type="text" class="search" id="search" placeholder="搜索学校 / 省份 / A+专业">
     </div>
 
     <div class="result-tip" id="result-tip"></div>
@@ -304,9 +304,11 @@
           const matchMajor = u.majors.some(m => m.major.includes(q));
           return matchSchool || matchMajor;
         });
+      } else {
+        list = [...universities].sort((a, b) => b.count - a.count);
       }
 
-      resultTip.textContent = q ? `搜索“${q}”找到 ${list.length} 所高校` : `共 ${list.length} 所高校拥有A+专业，按A+专业数量排序`;
+      resultTip.textContent = q ? `搜索”${q}”找到 ${list.length} 所高校` : `共 ${list.length} 所高校拥有A+专业，按A+专业数量排序`;
 
       if (!list.length) {
         resultsEl.innerHTML = '<div class="empty">未找到匹配结果</div>';
@@ -329,7 +331,7 @@
               </div>
               <div class="school-meta">
                 <span>${u.province}</span>
-                <span class="count-badge">A+专业 ${u.count} 个</span>
+                <span class="count-badge">A+专业 ${q ? showMajors.length : u.count} 个</span>
                 <span style="color:var(--muted)">▶</span>
               </div>
             </div>
@@ -357,10 +359,10 @@
       }
 
       resultsEl.innerHTML = list.map(([majorName, schools]) => {
-        const schoolHtml = schools.sort((a, b) => {
-          const ar = parseInt(a.rank) || 999;
-          const br = parseInt(b.rank) || 999;
-          return ar - br;
+        const schoolHtml = [...schools].sort((a, b) => {
+          const ar = parseInt(a.rank, 10);
+          const br = parseInt(b.rank, 10);
+          return (isNaN(ar) ? 999 : ar) - (isNaN(br) ? 999 : br);
         }).map(s => `<span class="school-chip">${s.univ} <span class="major-rank">${s.rank}</span></span>`).join('');
         return `
           <div class="card">
@@ -382,8 +384,8 @@
     window.toggleSchool = function(header) {
       const list = header.nextElementSibling;
       list.classList.toggle('open');
-      const arrow = header.querySelector('.school-meta span:last-child');
-      arrow.textContent = list.classList.contains('open') ? '▼' : '▶';
+      const arrow = header.querySelector('.school-meta span:last-of-type');
+      if (arrow) arrow.textContent = list.classList.contains('open') ? '▼' : '▶';
     };
 
     tabs.forEach(tab => {
@@ -391,7 +393,7 @@
         tabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         mode = tab.dataset.mode;
-        searchInput.placeholder = mode === 'school' ? '搜索学校名称 / A+专业名称' : '搜索A+专业名称';
+        searchInput.placeholder = mode === 'school' ? '搜索学校 / 省份 / A+专业' : '搜索A+专业名称';
         render();
       });
     });

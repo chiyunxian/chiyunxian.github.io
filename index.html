@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>2026软科中国大学排名 · 985 / 211 / 双一流</title>
+  <link rel="stylesheet" href="fonts/fcicon.css">
   <style>
     :root {
       --bg: #f5f7fa;
@@ -95,6 +96,8 @@
     .rank { font-weight: 700; color: var(--primary); width: 60px; }
     .rank.top3 { color: #b45309; }
     .name { font-weight: 500; }
+    .school-icon { width: 24px; height: 24px; margin-right: 8px; vertical-align: middle; object-fit: contain; background: #fff; border-radius: 4px; }
+    i.school-icon { width: auto; height: auto; font-size: 22px; }
     .tags { display: flex; gap: 6px; flex-wrap: wrap; }
     .tag {
       display: inline-block;
@@ -107,6 +110,43 @@
     .tag-985 { background: var(--tag-985); }
     .tag-211 { background: var(--tag-211); }
     .tag-syl { background: var(--tag-syl); }
+    @media (max-width: 640px) {
+      thead { display: none; }
+      table, tbody { display: block; }
+      tr {
+        display: block;
+        position: relative;
+        padding: 14px 14px 14px 62px;
+        border-bottom: 1px solid var(--border);
+      }
+      tr:last-child { border-bottom: none; }
+      td { display: block; padding: 0; border: none; }
+      td.rank {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 20px;
+        font-weight: 700;
+        width: auto;
+      }
+      td.rank.top3 { color: #b45309; }
+      td.name { font-size: 15px; font-weight: 500; text-align: right; margin-bottom: 2px; }
+      td.name .school-icon {
+        position: absolute;
+        bottom: 10px;
+        right: 12px;
+        width: 48px;
+        height: 48px;
+        pointer-events: none;
+      }
+      .school-icon { width: 28px; height: 28px; margin-right: 4px; }
+      i.school-icon { width: auto; height: auto; font-size: 24px; }
+      td.province, td.type { display: inline; font-size: 12px; color: var(--muted); }
+      td.province::after { content: " · "; }
+      td.tags { margin-top: 6px; }
+      .tag { font-size: 11px; padding: 2px 6px; }
+    }
     .note {
       margin-top: 16px;
       font-size: 12px;
@@ -136,8 +176,6 @@
       .view-tab { flex: 1; text-align: center; font-size: 13px; padding: 8px 12px; }
       .view-tab:last-child { margin-left: 0; flex-basis: 100%; }
       .card { overflow-x: auto; }
-      table { min-width: 600px; }
-      th, td { padding: 10px 8px; font-size: 13px; }
       .tag { font-size: 11px; padding: 2px 6px; }
       #map-container { height: 360px; }
       .map-header { padding: 12px 14px; }
@@ -481,6 +519,11 @@
     let searchTerm = '';
 
     const tbody = document.getElementById('tbody');
+
+    // 校徽：优先本地PNG，兜底字体图标
+    const LOGO_DIR = 'logos/';
+    const schoolLogoMap = {};
+    const schoolIconMap = {};
     const searchInput = document.getElementById('search');
     const tabs = document.querySelectorAll('.tab');
 
@@ -501,9 +544,9 @@
         if (currentFilter === '985') {
           matchFilter = u.tags.includes('985');
         } else if (currentFilter === '211') {
-          matchFilter = u.tags.includes('211') && !u.tags.includes('985');
+          matchFilter = u.tags.includes('211');
         } else if (currentFilter === '双一流') {
-          matchFilter = u.tags.includes('双一流') && !u.tags.includes('211');
+          matchFilter = u.tags.includes('双一流');
         }
         const term = searchTerm.trim().toLowerCase();
         const matchSearch = !term ||
@@ -533,15 +576,19 @@
 
     function render() {
       const data = sortData(getFiltered());
-      tbody.innerHTML = data.map(u => `
+      tbody.innerHTML = data.map(u => {
+        // 本地PNG优先，不存在则用字体图标兜底
+        const logoPath = LOGO_DIR + u.name + '.png';
+        const iconHtml = `<img src="${logoPath}" class="school-icon" alt="" loading="lazy" onerror="this.style.display='none'">`;
+        return `
         <tr>
           <td class="rank ${u.rank != null && u.rank <= 3 ? 'top3' : ''}">${u.rank != null ? u.rank : '—'}</td>
-          <td class="name">${u.name}</td>
-          <td>${u.province}</td>
-          <td>${u.type}</td>
-          <td>${renderTags(u.tags)}</td>
+          <td class="name">${iconHtml}${u.name}</td>
+          <td class="province">${u.province}</td>
+          <td class="type">${u.type}</td>
+          <td class="tags">${renderTags(u.tags)}</td>
         </tr>
-      `).join('');
+      `}).join('');
 
       document.getElementById('stat-total').textContent = data.length;
       document.getElementById('stat-985').textContent = data.filter(u => u.tags.includes('985')).length;
@@ -632,6 +679,10 @@
       const schools = universities.filter(u => u.province === shortName);
       if (!schools.length) {
         mapInfo.classList.remove('active');
+        mapInfo.style.display = 'none';
+        infoTitle.textContent = '';
+        infoStats.innerHTML = '';
+        infoSchools.innerHTML = '';
         return;
       }
       const c985 = schools.filter(u => u.tags.includes('985')).length;
@@ -698,7 +749,7 @@
           if (u.tags.includes('985')) color = '#ef4444';
           else if (u.tags.includes('211')) color = '#f59e0b';
           else if (u.tags.includes('双一流')) color = '#10b981';
-          const rankText = u.rank ? `第${u.rank}名` : '未排名';
+          const rankText = u.rank != null ? `第${u.rank}名` : '未排名';
           return `<span class="school-chip"><span class="dot" style="background:${color}"></span>${u.name} <small style="color:var(--muted)">(${rankText})</small></span>`;
         }).join('');
         return `<div style="margin-bottom:14px;"><div style="font-weight:600;margin-bottom:6px;color:var(--primary)">${province}</div><div class="school-list">${list}</div></div>`;
@@ -715,7 +766,7 @@
     }
 
     function searchMapProvince(query) {
-      const q = query.trim();
+      const q = query.trim().toLowerCase();
       if (!q) {
         restoreOriginalMap();
         mapInfo.classList.remove('active');
@@ -726,10 +777,10 @@
         return;
       }
       const matched = universities.filter(u =>
-        u.name.includes(q) ||
-        u.province.includes(q) ||
-        u.type.includes(q) ||
-        u.tags.some(t => t.includes(q))
+        u.name.toLowerCase().includes(q) ||
+        u.province.toLowerCase().includes(q) ||
+        u.type.toLowerCase().includes(q) ||
+        u.tags.some(t => t.toLowerCase().includes(q))
       );
       if (!matched.length) {
         restoreOriginalMap();
@@ -740,6 +791,8 @@
       const filteredData = getMapData(u => matched.includes(u));
       if (chart) {
         chart.setOption({ series: [{ data: filteredData }] });
+        chart.dispatchAction({ type: 'mapUnSelect' });
+        chart.dispatchAction({ type: 'hideTip' });
       }
       renderFilteredMapInfo(matched);
     }
@@ -760,10 +813,32 @@
 
           chart.on('click', function(params) {
             if (params.componentType === 'series') {
-              renderMapInfo(params.name);
+              const searchQuery = mapSearch.value.trim().toLowerCase();
+              if (searchQuery) {
+                // 搜索状态下点击省份：显示该省份中匹配搜索的学校
+                const reverseMap = {};
+                Object.keys(provinceNameMap).forEach(k => reverseMap[provinceNameMap[k]] = k);
+                const shortName = reverseMap[params.name] || params.name;
+                const matched = universities.filter(u =>
+                  u.province === shortName && (
+                    u.name.toLowerCase().includes(searchQuery) ||
+                    u.province.toLowerCase().includes(searchQuery) ||
+                    u.type.toLowerCase().includes(searchQuery) ||
+                    u.tags.some(t => t.toLowerCase().includes(searchQuery))
+                  )
+                );
+                if (matched.length) {
+                  selectProvinceOnMap(params.name);
+                  renderFilteredMapInfo(matched);
+                }
+              } else {
+                selectProvinceOnMap(params.name);
+                renderMapInfo(params.name);
+              }
             }
           });
 
+          const mapLabelFontSize = mapContainer.clientWidth < 500 ? 8 : mapContainer.clientWidth < 800 ? 10 : 11;
           const option = {
             tooltip: { show: false },
             visualMap: {
@@ -780,7 +855,8 @@
               type: 'map',
               map: 'china',
               roam: false,
-              label: { show: true, fontSize: 11 },
+              label: { show: true, fontSize: mapLabelFontSize },
+              labelLayout: { hideOverlap: true },
               emphasis: {
                 label: { show: true },
                 itemStyle: { areaColor: '#f59e0b' }
@@ -798,9 +874,12 @@
 
     viewTabs.forEach(tab => {
       tab.addEventListener('click', () => {
+        const view = tab.dataset.view;
+        // 跳过 A+专业排名 跳转链接
+        if (!view) return;
         viewTabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
-        if (tab.dataset.view === 'map') {
+        if (view === 'map') {
           tableCard.style.display = 'none';
           mapCard.style.display = 'block';
           initMap();
@@ -824,7 +903,10 @@
     });
 
     window.addEventListener('resize', () => {
-      if (chart) chart.resize();
+      if (!chart) return;
+      const newFontSize = mapContainer.clientWidth < 500 ? 8 : mapContainer.clientWidth < 800 ? 10 : 11;
+      chart.setOption({ series: [{ label: { fontSize: newFontSize }, labelLayout: { hideOverlap: true } }] });
+      chart.resize();
     });
 
   </script>

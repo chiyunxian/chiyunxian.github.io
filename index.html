@@ -544,9 +544,9 @@
         if (currentFilter === '985') {
           matchFilter = u.tags.includes('985');
         } else if (currentFilter === '211') {
-          matchFilter = u.tags.includes('211');
+          matchFilter = u.tags.includes('211') && !u.tags.includes('985');
         } else if (currentFilter === '双一流') {
-          matchFilter = u.tags.includes('双一流');
+          matchFilter = u.tags.includes('双一流') && !u.tags.includes('985') && !u.tags.includes('211');
         }
         const term = searchTerm.trim().toLowerCase();
         const matchSearch = !term ||

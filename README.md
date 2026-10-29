@@ -1,14 +1,24 @@
-# 2026 软科中国大学排名 · 985 / 211 / 双一流
+﻿# 2026 软科中国大学排名 · 985 / 211 / 双一流
 
-全国 985、211、双一流高校完整名单与 2026 软科排名数据展示。
+在线访问：**https://chiyunxian.github.io/**
 
-## 在线访问
+全国 985、211、双一流高校完整名单，按 2026 软科综合参考排名展示。
 
-部署到 GitHub Pages 后可通过如下地址访问：
+## 功能
 
-```
-https://<你的GitHub用户名>.github.io/<仓库名>/
-```
+- **列表视图**：按排名、学校、省市、类型排序，支持 985 / 211 / 双一流筛选。
+- **地图分布**：中国地图按省份展示高校数量，点击省份查看该省高校；支持省份缩放、悬浮提示、地图搜索。
+- **搜索**：支持学校名称、省市、类型、标签；结果按相关度排序并高亮匹配词，提供搜索建议和键盘操作。
+- **A+ 专业排名**：保留原 `a-plus.html` 页面入口。
+
+## 本次优化
+
+- 地图和 ECharts 改为**按需懒加载**，首屏不再下载 1MB ECharts 和 576KB GeoJSON。
+- 校徽统一转换为 **96px WebP**，总体积从约 7.6MB 降到约 1MB，并保持懒加载。
+- 样式与脚本拆分为 `styles.css`、`app.js`，便于浏览器缓存。
+- 主搜索增加相关度排序、匹配高亮、搜索建议、清空按钮和键盘上下选择。
+- 地图搜索增加搜索建议、结果统计、省份详情、省份排行、重置和“在列表中查看”。
+- 适配手机端，修复排序空值、搜索空状态等细节。
 
 ## 本地预览
 
@@ -16,25 +26,16 @@ https://<你的GitHub用户名>.github.io/<仓库名>/
 python -m http.server 8080
 ```
 
-然后打开 http://localhost:8080/
+然后打开 <http://localhost:8080/>。
 
-## 部署步骤
+## 文件
 
-1. 在 GitHub 新建一个公开仓库，例如 `ruankao2026`。
-2. 将本目录下所有文件推送到仓库 `main` 分支：
-   ```bash
-   git init
-   git add .
-   git commit -m "init"
-   git branch -M main
-   git remote add origin https://github.com/<你的GitHub用户名>/<仓库名>.git
-   git push -u origin main
-   ```
-3. 进入仓库 **Settings → Pages → Build and deployment**，选择 **GitHub Actions**。
-4. 等待 Actions 运行完成，即可通过 Pages 链接访问。
+- `index.html`：页面结构
+- `styles.css`：页面样式
+- `app.js`：列表、搜索、地图交互
+- `china-map.json`：中国地图 GeoJSON（按需加载）
+- `echarts.min.js`：图表库（按需加载）
+- `logos/*.webp`：优化后的校徽
+- `a-plus.html` / `a_plus_data.js`：A+ 专业排名页面
 
-## 功能
-
-- 列表视图：按 2026 软科排名展示高校，支持筛选 985 / 211 / 双一流、搜索、排序
-- 地图分布：中国地图展示各省高校数量，点击省份显示详情
-- 离线可用：`echarts.min.js` 已本地化，地图 GeoJSON 已嵌入页面
+数据来源：软科（shanghairanking.cn）2026 年 4 月 15 日发布的“2026 软科中国大学排名”。页面仅用于学习参考。
